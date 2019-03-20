@@ -35,7 +35,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$USER_HOME$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -125,12 +125,12 @@
       <workItem from="1553103754621" duration="1297000" />
       <workItem from="1553105149816" duration="334000" />
       <workItem from="1553106342705" duration="3035000" />
-      <workItem from="1553110248198" duration="247000" />
+      <workItem from="1553110248198" duration="525000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="4913000" />
+    <option name="totallyTimeSpent" value="5191000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
