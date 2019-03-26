@@ -25,14 +25,16 @@ def main():
     is_outputting_photo = False
 
     time_start = time.time()
+    debounce_start = time.time()
 
     time.sleep(1)  # VERY IMPORTANT, NEEDS TO BE INCLUDED AT THE BEGINNING
     print("Ready!")
     while True:
         center_button_value = center_button.read()
         # print(f"center_button_value: {center_button_value}")
-        if center_button_value != 0:
-            is_outputting_photo = set_outputting_photo(is_outputting_photo, center_button_value)
+        if center_button_value != 0 and time.time() - debounce_start > 0.2:
+                is_outputting_photo = set_outputting_photo(is_outputting_photo, center_button_value)
+                debounce_start = time.time()
 
         red_led.write(1)
         photo_value = photo_sensor.read()
@@ -41,7 +43,7 @@ def main():
         volt = 4.98
         degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
 
-        if time.time() - time_start > 1:
+        if time.time() - time_start > 5:
             time_start = time.time()
             if is_outputting_photo:
                 print(f"Photo sensor value: {photo_value}")
