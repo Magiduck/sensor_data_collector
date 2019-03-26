@@ -31,7 +31,8 @@ def main():
     while True:
         center_button_value = center_button.read()
         # print(f"center_button_value: {center_button_value}")
-        is_outputting_photo = set_outputting_photo(is_outputting_photo, center_button_value)
+        if center_button_value != 0:
+            is_outputting_photo = set_outputting_photo(is_outputting_photo, center_button_value)
 
         red_led.write(1)
         photo_value = photo_sensor.read()
@@ -40,14 +41,14 @@ def main():
         volt = 4.98
         degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
 
-        # if time_start + 1 >= time.time():
-        #     time_start = time.time()
-        if is_outputting_photo:
-            print(f"Photo sensor value: {photo_value}")
-            print(f"Photo sensor value in lux: {photo_value}")
-        else:
-            print(f"Temperature sensor value: {temp_value}")
-            print(f"Temperature sensor value in degrees Celsius: {degrees_celsius}")
+        if time.time() - time_start > 1:
+            time_start = time.time()
+            if is_outputting_photo:
+                print(f"Photo sensor value: {photo_value}")
+                print(f"Photo sensor value in lux: {photo_value}")
+            else:
+                print(f"Temperature sensor value: {temp_value}")
+                print(f"Temperature sensor value in degrees Celsius: {degrees_celsius}")
 
         red_led.write(0)
 
