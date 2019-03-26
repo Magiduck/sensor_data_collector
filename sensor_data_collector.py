@@ -19,37 +19,42 @@ def main():
     temp_sensor.enable_reporting()
     photo_sensor = board.get_pin('a:2:i')
     photo_sensor.enable_reporting()
-    center_button = board.get_pin('d:13:0')
+    center_button = board.get_pin('d:13:i')
     center_button.enable_reporting()
 
-    previous_button_value = 0
+    is_outputting_photo = False
 
-    is_reading_values = False
+    time_start = time.time()
 
     time.sleep(1)  # VERY IMPORTANT, NEEDS TO BE INCLUDED AT THE BEGINNING
     print("Ready!")
     while True:
         center_button_value = center_button.read()
-        is_reading_values = set_reading_values(is_reading_values, center_button_value, previous_button_value)
+        # print(f"center_button_value: {center_button_value}")
+        is_outputting_photo = set_outputting_photo(is_outputting_photo, center_button_value)
 
-        if is_reading_values:
-            print(is_reading_values)
-            red_led.write(1)
-            photo_value = photo_sensor.read()
-            temp_value = temp_sensor.read()
+        red_led.write(1)
+        photo_value = photo_sensor.read()
+        temp_value = temp_sensor.read()
+
+        volt = 4.98
+        degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
+
+        # if time_start + 1 >= time.time():
+        #     time_start = time.time()
+        if is_outputting_photo:
             print(f"Photo sensor value: {photo_value}")
             print(f"Photo sensor value in lux: {photo_value}")
-            volt = 4.98
-            degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
+        else:
             print(f"Temperature sensor value: {temp_value}")
             print(f"Temperature sensor value in degrees Celsius: {degrees_celsius}")
-            red_led.write(0)
-        previous_button_value = center_button_value
+
+        red_led.write(0)
 
 
-def set_reading_values(is_reading_values, center_button_value, previous_button_value):
-    if center_button_value == 1 and previous_button_value == 0:
-        if is_reading_values:
+def set_outputting_photo(is_outputting_photo, center_button_value):
+    if center_button_value == 1:
+        if is_outputting_photo:
             return False
         else:
             return True
