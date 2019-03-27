@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f533d91c-beca-43db-8479-f7621bfea8e9" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/MicroController.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sensor_data_collector.py" beforeDir="false" afterPath="$PROJECT_DIR$/sensor_data_collector.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -17,25 +15,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sensor_data_collector.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="376">
-              <caret line="90" lean-forward="true" selection-start-line="52" selection-end-line="90" />
+            <state relative-caret-position="406">
+              <caret line="98" column="82" lean-forward="true" selection-start-line="98" selection-start-column="82" selection-end-line="98" selection-end-column="82" />
               <folding>
-                <element signature="e#149#174#0" expanded="true" />
+                <element signature="e#149#193#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MicroController.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="119">
-              <caret line="7" column="18" lean-forward="true" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
-            </state>
-          </provider>
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
     </leaf>
@@ -54,8 +48,8 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/arduino.py" />
-        <option value="$PROJECT_DIR$/sensor_data_collector.py" />
         <option value="$PROJECT_DIR$/MicroController.py" />
+        <option value="$PROJECT_DIR$/sensor_data_collector.py" />
       </list>
     </option>
   </component>
@@ -148,12 +142,12 @@
       <workItem from="1553532638133" duration="3575000" />
       <workItem from="1553593586249" duration="5561000" />
       <workItem from="1553684820365" duration="398000" />
-      <workItem from="1553707514733" duration="5370000" />
+      <workItem from="1553707514733" duration="9735000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="33075000" />
+    <option name="totallyTimeSpent" value="37440000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -182,7 +176,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.3286119" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.3512748" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.30878186" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.3243626" />
       <window_info anchor="bottom" id="Inspection Results" order="13" weight="0.3286119" />
       <window_info active="true" anchor="bottom" id="Concurrent Activities Diagram" order="14" weight="0.3286119" />
@@ -211,20 +205,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/MicroController.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/sensor_data_collector.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="376">
-          <caret line="90" lean-forward="true" selection-start-line="52" selection-end-line="90" />
+        <state relative-caret-position="406">
+          <caret line="98" column="82" lean-forward="true" selection-start-line="98" selection-start-column="82" selection-end-line="98" selection-end-column="82" />
           <folding>
-            <element signature="e#149#174#0" expanded="true" />
+            <element signature="e#149#193#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MicroController.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="7" column="18" lean-forward="true" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
         </state>
       </provider>
     </entry>
