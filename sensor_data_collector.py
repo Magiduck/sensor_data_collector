@@ -52,15 +52,14 @@ def main():
 
             volt = 4.98
             degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
+            degrees_celsius = round(degrees_celsius, 2)
 
             if time.time() - time_start > float(args['<interval>']):
                 time_start = time.time()
                 if is_outputting_photo:
-                    print(f"Photo sensor value: {photo_value}")
-                    print(f"Photo sensor value in lux: {photo_value}")
+                    print(f"{time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}")
                 else:
-                    print(f"Temperature sensor value: {temp_value}")
-                    print(f"Temperature sensor value in degrees Celsius: {degrees_celsius}")
+                    print(f"{time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}")
 
             red_led.write(0)
 
