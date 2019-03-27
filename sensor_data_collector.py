@@ -2,11 +2,20 @@ try:
     from pyfirmata import Arduino, util
 except:
     import pip
+
     pip.main(['install', "pyfirmata"])
     from pyfirmata import Arduino, util
 
+from docopt import docopt
+
 import time
 
+usage = """
+Usage: 
+    sensor_data_collector.py start <interval>
+"""
+
+args = docopt(usage)
 
 def main():
     board = Arduino("COM4")
@@ -29,30 +38,31 @@ def main():
 
     time.sleep(1)  # VERY IMPORTANT, NEEDS TO BE INCLUDED AT THE BEGINNING
     print("Ready!")
-    while True:
-        center_button_value = center_button.read()
-        # print(f"center_button_value: {center_button_value}")
-        if center_button_value != 0 and time.time() - debounce_start > 0.2:
+    if args['start']:
+        while True:
+            center_button_value = center_button.read()
+            # print(f"center_button_value: {center_button_value}")
+            if center_button_value != 0 and time.time() - debounce_start > 0.2:
                 is_outputting_photo = set_outputting_photo(is_outputting_photo, center_button_value)
                 debounce_start = time.time()
 
-        red_led.write(1)
-        photo_value = photo_sensor.read()
-        temp_value = temp_sensor.read()
+            red_led.write(1)
+            photo_value = photo_sensor.read()
+            temp_value = temp_sensor.read()
 
-        volt = 4.98
-        degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
+            volt = 4.98
+            degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
 
-        if time.time() - time_start > 5:
-            time_start = time.time()
-            if is_outputting_photo:
-                print(f"Photo sensor value: {photo_value}")
-                print(f"Photo sensor value in lux: {photo_value}")
-            else:
-                print(f"Temperature sensor value: {temp_value}")
-                print(f"Temperature sensor value in degrees Celsius: {degrees_celsius}")
+            if time.time() - time_start > float(args['<interval>']):
+                time_start = time.time()
+                if is_outputting_photo:
+                    print(f"Photo sensor value: {photo_value}")
+                    print(f"Photo sensor value in lux: {photo_value}")
+                else:
+                    print(f"Temperature sensor value: {temp_value}")
+                    print(f"Temperature sensor value in degrees Celsius: {degrees_celsius}")
 
-        red_led.write(0)
+            red_led.write(0)
 
 
 def set_outputting_photo(is_outputting_photo, center_button_value):
