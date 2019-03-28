@@ -8,6 +8,7 @@ except:
 
 from docopt import docopt  # Library for CLI
 import time
+from tkinter import *
 
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
@@ -22,11 +23,16 @@ args = docopt(usage)
 
 
 def main():
+    root = Tk()
+    output_window = Text(root)
+    scrollbar = Scrollbar(root)
+    scrollbar.pack(side="right", fill="y")
+    output_window.pack(side="left", fill="both", expand=True)
+
     # Pyfirmata
     board = Arduino("COM4")
     it = util.Iterator(board)
     it.start()
-
     # Setting up pins on the Arduino board
     red_led = board.get_pin('d:6:o')
     blue_led = board.get_pin('d:10:o')
@@ -50,11 +56,13 @@ def main():
     time.sleep(1)  # Important for pyfirmata to initialize before trying to read values
     print("Ready!")
     if args['start']:  # If the argument start was given
-        while True:  # Infinite loop for not finishing the program but waiting on Arduino inputs
-            read_data(micro_controller)  # Read the data from the Arduino
+        while True:
+            read_data(micro_controller, output_window)  # Read the data from the Arduino
+            root.update_idletasks()
+            root.update()
 
 
-def read_data(micro_controller):
+def read_data(micro_controller, output_window):
     """ Reading light sensor and temperature sensor data from the Arduino."""
 
     center_button_value = micro_controller.center_button.read()
@@ -77,7 +85,7 @@ def read_data(micro_controller):
     degrees_celsius = round(degrees_celsius, 2)
 
     # Print the data based on which sensor should be outputted
-    print_data(micro_controller, photo_value, temp_value, degrees_celsius)
+    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window)
 
 
 def set_outputting_photo(is_outputting_photo, center_button_value):
@@ -90,7 +98,7 @@ def set_outputting_photo(is_outputting_photo, center_button_value):
             return True
 
 
-def print_data(micro_controller, photo_value, temp_value, degrees_celsius):
+def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window):
     """ Print the data from either the photo sensor or temperature sensor based on set_outputting_photo."""
     # Only continue if the user-specified interval (in seconds) has passed
     if time.time() - micro_controller.time_start > float(args['<interval_in_seconds>']):
@@ -98,13 +106,15 @@ def print_data(micro_controller, photo_value, temp_value, degrees_celsius):
         micro_controller.set_time_start(time.time())
         if micro_controller.is_outputting_photo:  # Output the data from the photo sensor
             micro_controller.red_led.write(1)
-            print(f"{time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}")
+            output_window.insert(END, f"{time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}\n")
             micro_controller.red_led.write(0)
 
         else:  # Output the data from the temperature sensor
             micro_controller.blue_led.write(1)
-            print(f"{time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}")
+            output_window.insert(END, f"{time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}\n")
             micro_controller.blue_led.write(0)
+        # output_window.config(state=DISABLED)
+        output_window.see("end")
 
 
 if __name__ == '__main__':
