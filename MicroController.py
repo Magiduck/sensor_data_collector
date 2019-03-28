@@ -1,7 +1,7 @@
 class MicroController:
 
     def __init__(self, center_button, debounce_start, is_outputting_photo, photo_sensor, temp_sensor, time_start,
-                 red_led, blue_led, args):
+                 red_led, blue_led):
         self.center_button = center_button
         self.debounce_start = debounce_start
         self.is_outputting_photo = is_outputting_photo
@@ -10,7 +10,6 @@ class MicroController:
         self.time_start = time_start
         self.red_led = red_led
         self.blue_led = blue_led
-        self.args = args
 
     def set_outputting_photo(self, is_outputting_photo):
         self.is_outputting_photo = is_outputting_photo

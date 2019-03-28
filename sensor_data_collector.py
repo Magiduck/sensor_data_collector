@@ -6,29 +6,46 @@ except:
     pip.main(['install', "pyfirmata"])
     from pyfirmata import Arduino, util
 
-from docopt import docopt  # Library for CLI
 import time
 from tkinter import *
 
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
-# Command line options / menu
-usage = """
-Usage:
-    sensor_data_collector.py 
-    sensor_data_collector.py start <interval_in_seconds>
-"""
-
-args = docopt(usage)
-
 
 def main():
     root = Tk()
-    output_window = Text(root)
+    output_text = Text(root)
     scrollbar = Scrollbar(root)
-    scrollbar.pack(side="right", fill="y")
-    output_window.pack(side="left", fill="both", expand=True)
+    entry = Entry(root)
+    button = Button(root, text="send", command=lambda: determine_input(entry, root, output_text))
+    output_text.grid(row=0, column=0)
+    scrollbar.grid(row=0, column=1, sticky='ns')
+    entry.grid(row=1, column=0, sticky='we')
+    button.grid(row=1, column=1)
+    root.bind('<Return>', determine_input(entry, root, output_text))
+    output_text.delete('1.0', END)
+    output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
+                            "The following commands are accepted: \n\n"
+                            "help, ? or menu \t\t\t\t\t Shows this menu \n"
+                            "start <interval_in_seconds> \t\t\t\t\t Starts the data collection")
+    root.mainloop()
 
+
+def determine_input(entry, root, output_text):
+    print("wow!")
+    command = entry.get()
+    if "start" in command:
+        start_program(root, output_text, command)
+    elif "help" or "?" or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:
+        output_text.insert(END, "\n"
+                                "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
+                                "The following commands are accepted: \n\n"
+                                "help, ? or menu \t\t\t\t\t Shows this menu \n"
+                                "start <interval_in_seconds> \t\t\t\t\t Starts the data collection")
+
+
+
+def start_program(root, output_text, command):
     # Pyfirmata
     board = Arduino("COM4")
     it = util.Iterator(board)
@@ -51,18 +68,20 @@ def main():
 
     # Custom object to store info of the Arduino micro controller
     micro_controller = MicroController(center_button, debounce_start, is_outputting_photo, photo_sensor, temp_sensor,
-                                       time_start, red_led, blue_led, args)
+                                       time_start, red_led, blue_led)
 
     time.sleep(1)  # Important for pyfirmata to initialize before trying to read values
     print("Ready!")
-    if args['start']:  # If the argument start was given
-        while True:
-            read_data(micro_controller, output_window)  # Read the data from the Arduino
-            root.update_idletasks()
-            root.update()
+
+    output_text.insert(END, "\n")
+
+    while True:
+        read_data(micro_controller, output_text, command)  # Read the data from the Arduino
+        root.update_idletasks()
+        root.update()
 
 
-def read_data(micro_controller, output_window):
+def read_data(micro_controller, output_window, command):
     """ Reading light sensor and temperature sensor data from the Arduino."""
 
     center_button_value = micro_controller.center_button.read()
@@ -85,7 +104,7 @@ def read_data(micro_controller, output_window):
     degrees_celsius = round(degrees_celsius, 2)
 
     # Print the data based on which sensor should be outputted
-    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window)
+    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command)
 
 
 def set_outputting_photo(is_outputting_photo, center_button_value):
@@ -98,17 +117,20 @@ def set_outputting_photo(is_outputting_photo, center_button_value):
             return True
 
 
-def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window):
+def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command):
     """ Print the data from either the photo sensor or temperature sensor based on set_outputting_photo."""
     # Only continue if the user-specified interval (in seconds) has passed
-    if time.time() - micro_controller.time_start > float(args['<interval_in_seconds>']):
+    if command == "start":
+        interval = "1"
+    else:
+        interval = command.split("start")[1]
+    if time.time() - micro_controller.time_start > float(interval):
         # Set start time for next loop
         micro_controller.set_time_start(time.time())
         if micro_controller.is_outputting_photo:  # Output the data from the photo sensor
             micro_controller.red_led.write(1)
             output_window.insert(END, f"{time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}\n")
             micro_controller.red_led.write(0)
-
         else:  # Output the data from the temperature sensor
             micro_controller.blue_led.write(1)
             output_window.insert(END, f"{time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}\n")
