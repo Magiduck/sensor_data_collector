@@ -13,33 +13,36 @@ from MicroController import MicroController  # Custom class to hold info of the 
 
 is_running = False
 
+
 def main():
+    micro_controller = initiate_arduino()
+
     root = Tk()
     output_text = Text(root)
     scrollbar = Scrollbar(root)
     entry = Entry(root)
-    button = Button(root, text="send", command=lambda: determine_input(entry, root, output_text))
+    button = Button(root, text="send", command=lambda: determine_input(entry, root, output_text, micro_controller))
     output_text.grid(row=0, column=0)
     scrollbar.grid(row=0, column=1, sticky='ns')
     entry.grid(row=1, column=0, sticky='we')
     button.grid(row=1, column=1)
-    root.bind('<Return>', determine_input(entry, root, output_text))
+    root.bind('<Return>', determine_input(entry, root, output_text, micro_controller))
     output_text.delete('1.0', END)
     output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                             "The following commands are accepted: \n\n"
                             "help, ? or menu \t\t\t\t\t Shows this menu \n"
                             "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
-                            "stop \t\t\t\t\t Stops the data collection")
+                            "stop \t\t\t\t\t Stops the data collection \n")
     root.mainloop()
 
 
-def determine_input(entry, root, output_text):
+def determine_input(entry, root, output_text, micro_controller):
     command = entry.get()
     entry.delete(0, 'end')
     global is_running
     if "start" in command:
         is_running = True
-        start_data_collection(root, output_text, command)
+        start_data_collection(root, output_text, command, micro_controller)
     elif "stop" in command:
         is_running = False
         output_text.insert(END, "You have stopped the collection of data! \n")
@@ -49,10 +52,10 @@ def determine_input(entry, root, output_text):
                                 "The following commands are accepted: \n\n"
                                 "help, ? or menu \t\t\t\t\t Shows this menu \n"
                                 "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
-                                "stop \t\t\t\t\t Stops the data collection")
+                                "stop \t\t\t\t\t Stops the data collection \n")
 
 
-def start_data_collection(root, output_text, command):
+def initiate_arduino():
     # Pyfirmata
     board = Arduino("COM4")
     it = util.Iterator(board)
@@ -80,8 +83,10 @@ def start_data_collection(root, output_text, command):
     time.sleep(1)  # Important for pyfirmata to initialize before trying to read values
     print("Ready!")
 
-    output_text.insert(END, "\n")
+    return micro_controller
 
+
+def start_data_collection(root, output_text, command, micro_controller):
     if command == "start":
         interval = "1"
     else:
