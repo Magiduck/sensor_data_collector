@@ -30,10 +30,9 @@ def main():
     output_text.delete('1.0', END)
     output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                             "The following commands are accepted: \n\n"
-                            "help, ? or menu \t\t\t\t\t Shows this menu \n"
-                            "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
-                            "start (temp | light | all) <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
-                            "stop \t\t\t\t\t Stops the data collection \n")
+                            "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
+                            "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
+                            "stop \t\t\t\t\t\t     Stops the data collection \n")
     root.mainloop()
 
 
@@ -51,10 +50,9 @@ def determine_input(entry, root, output_text, micro_controller):
         output_text.insert(END, "\n"
                                 "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                                 "The following commands are accepted: \n\n"
-                                "help, ? or menu \t\t\t\t\t Shows this menu \n"
-                                "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
-                                "start (temp | light | all) <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
-                                "stop \t\t\t\t\t Stops the data collection \n")
+                                "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
+                                "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
+                                "stop \t\t\t\t\t\t     Stops the data collection \n")
 
 
 def initiate_arduino():
@@ -89,29 +87,14 @@ def initiate_arduino():
 
 
 def start_data_collection(root, output_text, command, micro_controller):
-    if command == "start":
-        interval = "1"
-    else:
-        interval = command.split("start")[1]
-
     while is_running:
-        read_data(micro_controller, output_text, interval)  # Read the data from the Arduino
+        read_data(micro_controller, output_text, command)  # Read the data from the Arduino
         root.update_idletasks()
         root.update()
 
 
-def read_data(micro_controller, output_window, interval):
+def read_data(micro_controller, output_window, command):
     """ Reading light sensor and temperature sensor data from the Arduino."""
-
-    center_button_value = micro_controller.center_button.read()
-
-    # Check if the button has been pressed, keeping in mind the debounce
-    if center_button_value != 0 and time.time() - micro_controller.debounce_start > 0.2:
-        # Set boolean to true or false based on if photo sensor should be outputting or temperature sensor
-        micro_controller.set_outputting_photo(set_outputting_photo(micro_controller.is_outputting_photo,
-                                                                   center_button_value))
-        # Set the debounce again for the next loop
-        micro_controller.set_debounce_start(time.time())
 
     # Read values of both sensors
     photo_value = micro_controller.photo_sensor.read()
@@ -123,34 +106,36 @@ def read_data(micro_controller, output_window, interval):
     degrees_celsius = round(degrees_celsius, 2)
 
     # Print the data based on which sensor should be outputted
-    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, interval)
+    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command)
 
 
-def set_outputting_photo(is_outputting_photo, center_button_value):
-    """ Determining if the photo sensor or temperature sensor should be outputted."""
-    # Just a simple switch when the button has been pressed
-    if center_button_value == 1:
-        if is_outputting_photo:
-            return False
-        else:
-            return True
-
-
-def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, interval):
+def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command):
     """ Print the data from either the photo sensor or temperature sensor based on set_outputting_photo."""
     # Only continue if the user-specified interval (in seconds) has passed
+    interval = "1"
+    if command == "start temp" or command == "start light" or command == "start all":
+        interval = "1"
+    else:
+        if "start temp" in command:
+            interval = command.split("start temp")[1]
+        if "start light" in command:
+            interval = command.split("start light")[1]
+        if "start all" in command:
+            interval = command.split("start all")[1]
     if time.time() - micro_controller.time_start > float(interval):
         # Set start time for next loop
         micro_controller.set_time_start(time.time())
-        if micro_controller.is_outputting_photo:  # Output the data from the photo sensor
+        if "light" in command or "all" in command:
             micro_controller.red_led.write(1)
-            output_window.insert(END, f"{time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}\n")
+            output_window.insert(END, f"Light sensor: {time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}\n")
             micro_controller.red_led.write(0)
-        else:  # Output the data from the temperature sensor
+        if "temp" in command or "all" in command:
             micro_controller.blue_led.write(1)
-            output_window.insert(END, f"{time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}\n")
+            output_window.insert(END, f"Temperature sensor: {time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}\n")
             micro_controller.blue_led.write(0)
         # output_window.config(state=DISABLED)
+        if "all" in command:
+            output_window.insert(END, "\n")
         output_window.see("end")
 
 
