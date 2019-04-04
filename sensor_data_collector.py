@@ -32,6 +32,7 @@ def main():
                             "The following commands are accepted: \n\n"
                             "help, ? or menu \t\t\t\t\t Shows this menu \n"
                             "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
+                            "start (temp | light | all) <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
                             "stop \t\t\t\t\t Stops the data collection \n")
     root.mainloop()
 
@@ -52,6 +53,7 @@ def determine_input(entry, root, output_text, micro_controller):
                                 "The following commands are accepted: \n\n"
                                 "help, ? or menu \t\t\t\t\t Shows this menu \n"
                                 "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
+                                "start (temp | light | all) <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
                                 "stop \t\t\t\t\t Stops the data collection \n")
 
 
