@@ -11,6 +11,7 @@ from tkinter import *
 
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
+is_running = False
 
 def main():
     root = Tk()
@@ -27,25 +28,31 @@ def main():
     output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                             "The following commands are accepted: \n\n"
                             "help, ? or menu \t\t\t\t\t Shows this menu \n"
-                            "start <interval_in_seconds> \t\t\t\t\t Starts the data collection")
+                            "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
+                            "stop \t\t\t\t\t Stops the data collection")
     root.mainloop()
 
 
 def determine_input(entry, root, output_text):
-    print("wow!")
     command = entry.get()
+    entry.delete(0, 'end')
+    global is_running
     if "start" in command:
-        start_program(root, output_text, command)
+        is_running = True
+        start_data_collection(root, output_text, command)
+    elif "stop" in command:
+        is_running = False
+        output_text.insert(END, "You have stopped the collection of data! \n")
     elif "help" or "?" or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:
         output_text.insert(END, "\n"
                                 "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                                 "The following commands are accepted: \n\n"
                                 "help, ? or menu \t\t\t\t\t Shows this menu \n"
-                                "start <interval_in_seconds> \t\t\t\t\t Starts the data collection")
+                                "start <interval_in_seconds> \t\t\t\t\t Starts the data collection \n"
+                                "stop \t\t\t\t\t Stops the data collection")
 
 
-
-def start_program(root, output_text, command):
+def start_data_collection(root, output_text, command):
     # Pyfirmata
     board = Arduino("COM4")
     it = util.Iterator(board)
@@ -75,13 +82,18 @@ def start_program(root, output_text, command):
 
     output_text.insert(END, "\n")
 
-    while True:
-        read_data(micro_controller, output_text, command)  # Read the data from the Arduino
+    if command == "start":
+        interval = "1"
+    else:
+        interval = command.split("start")[1]
+
+    while is_running:
+        read_data(micro_controller, output_text, interval)  # Read the data from the Arduino
         root.update_idletasks()
         root.update()
 
 
-def read_data(micro_controller, output_window, command):
+def read_data(micro_controller, output_window, interval):
     """ Reading light sensor and temperature sensor data from the Arduino."""
 
     center_button_value = micro_controller.center_button.read()
@@ -104,7 +116,7 @@ def read_data(micro_controller, output_window, command):
     degrees_celsius = round(degrees_celsius, 2)
 
     # Print the data based on which sensor should be outputted
-    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command)
+    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, interval)
 
 
 def set_outputting_photo(is_outputting_photo, center_button_value):
@@ -117,13 +129,9 @@ def set_outputting_photo(is_outputting_photo, center_button_value):
             return True
 
 
-def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command):
+def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, interval):
     """ Print the data from either the photo sensor or temperature sensor based on set_outputting_photo."""
     # Only continue if the user-specified interval (in seconds) has passed
-    if command == "start":
-        interval = "1"
-    else:
-        interval = command.split("start")[1]
     if time.time() - micro_controller.time_start > float(interval):
         # Set start time for next loop
         micro_controller.set_time_start(time.time())
