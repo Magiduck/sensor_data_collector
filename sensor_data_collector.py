@@ -11,23 +11,27 @@ from tkinter import *
 
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
-is_running = False
+is_running = False  # Global boolean to determine if data collection is on or not
 
 
 def main():
-    micro_controller = initiate_arduino()
+    micro_controller = initiate_arduino()  # get information about the arduino and set it to micro_controller
 
+    # Tkinter GUI creation
     root = Tk()
     output_text = Text(root)
     scrollbar = Scrollbar(root)
     entry = Entry(root)
+    # Make the button determine what was typed in the entry field
     button = Button(root, text="send", command=lambda: determine_input(entry, root, output_text, micro_controller))
+    # Some layout
     output_text.grid(row=0, column=0)
-    scrollbar.grid(row=0, column=1, sticky='ns')
-    entry.grid(row=1, column=0, sticky='we')
+    scrollbar.grid(row=0, column=1, sticky='ns')  # Fill up from north to south
+    entry.grid(row=1, column=0, sticky='we')  # Fill up from west to east
     button.grid(row=1, column=1)
     root.bind('<Return>', determine_input(entry, root, output_text, micro_controller))
     output_text.delete('1.0', END)
+    # The menu to show to the user
     output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                             "The following commands are accepted: \n\n"
                             "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
@@ -36,26 +40,8 @@ def main():
     root.mainloop()
 
 
-def determine_input(entry, root, output_text, micro_controller):
-    command = entry.get()
-    entry.delete(0, 'end')
-    global is_running
-    if "start" in command:
-        is_running = True
-        start_data_collection(root, output_text, command, micro_controller)
-    elif "stop" in command:
-        is_running = False
-        output_text.insert(END, "You have stopped the collection of data! \n")
-    elif "help" or "?" or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:
-        output_text.insert(END, "\n"
-                                "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
-                                "The following commands are accepted: \n\n"
-                                "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
-                                "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
-                                "stop \t\t\t\t\t\t     Stops the data collection \n")
-
-
 def initiate_arduino():
+    """ Sets up the Arduino port and pins. Returns a microController object for saving data about the Arduino."""
     # Pyfirmata
     board = Arduino("COM4")
     it = util.Iterator(board)
@@ -86,9 +72,32 @@ def initiate_arduino():
     return micro_controller
 
 
+def determine_input(entry, root, output_text, micro_controller):
+    """Determine which command the user has entered and call their respective functions"""
+    command = entry.get()  # Get the command
+    entry.delete(0, 'end')  # And clear the entry field
+    global is_running   # Boolean to see if the program should collect data or not
+    if "start" in command:  # Start the collection of data
+        is_running = True
+        start_data_collection(root, output_text, command, micro_controller)
+    elif "stop" in command:   # Stop the collection of data
+        is_running = False
+        output_text.insert(END, "You have stopped the collection of data! \n")
+    elif "help" or '?' or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:   # Show the help menu
+        output_text.insert(END, "\n"
+                                "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
+                                "The following commands are accepted: \n\n"
+                                "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
+                                "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
+                                "stop \t\t\t\t\t\t     Stops the data collection \n")
+
+
 def start_data_collection(root, output_text, command, micro_controller):
+    """Starts the collection of data and updates the GUI accordingly. Creates a loop that runs until the user send the
+    stop command."""
     while is_running:
         read_data(micro_controller, output_text, command)  # Read the data from the Arduino
+        # Refreshing the GUI
         root.update_idletasks()
         root.update()
 

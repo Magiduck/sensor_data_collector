@@ -1,4 +1,5 @@
 class MicroController:
+    """ A custom class for saving data about the Arduino."""
 
     def __init__(self, center_button, debounce_start, is_outputting_photo, photo_sensor, temp_sensor, time_start,
                  red_led, blue_led):
