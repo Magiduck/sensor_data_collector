@@ -17,6 +17,7 @@ is_running = False  # Global boolean to determine if data collection is on or no
 
 
 def main():
+    """The main function which sets up the GUI"""
     micro_controller = initiate_arduino()  # get information about the arduino and set it to micro_controller
 
     # Tkinter GUI creation
@@ -31,7 +32,7 @@ def main():
     scrollbar.grid(row=0, column=1, sticky='ns')  # Fill up from north to south
     entry.grid(row=1, column=0, sticky='we')  # Fill up from west to east
     button.grid(row=1, column=1)
-    root.bind('<Return>', determine_input(entry, root, output_text, micro_controller))
+    root.bind('<Return>', (lambda event: determine_input(entry, root, output_text, micro_controller)))
     output_text.delete('1.0', END)
     # The menu to show to the user
     output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
@@ -177,6 +178,7 @@ def print_and_write_data(micro_controller, photo_value, temp_value, degrees_cels
 
 
 def list_csv_files(output_window):
+    """display a list to the user of csv files in the output directory"""
     counter = 0
     output_window.insert(END, "ID: \t File name: \n")
     for file in os.listdir('output'):
