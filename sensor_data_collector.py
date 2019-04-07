@@ -8,6 +8,7 @@ except:
 
 import time
 from tkinter import *
+import csv
 
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
@@ -95,14 +96,18 @@ def determine_input(entry, root, output_text, micro_controller):
 def start_data_collection(root, output_text, command, micro_controller):
     """Starts the collection of data and updates the GUI accordingly. Creates a loop that runs until the user send the
     stop command."""
-    while is_running:
-        read_data(micro_controller, output_text, command)  # Read the data from the Arduino
-        # Refreshing the GUI
-        root.update_idletasks()
-        root.update()
+    # Open the csv file writer and write an header
+    with open('output/collected_data.csv', 'w', newline='') as csvfile:
+        data_writer = csv.writer(csvfile)
+        data_writer.writerow(['Time stamp', 'Sensor name', 'Raw sensor value'])
+        while is_running:
+            read_data(micro_controller, output_text, command, data_writer)  # Read the data from the Arduino
+            # Refreshing the GUI
+            root.update_idletasks()
+            root.update()
 
 
-def read_data(micro_controller, output_window, command):
+def read_data(micro_controller, output_window, command, data_writer):
     """ Reading light sensor and temperature sensor data from the Arduino."""
 
     # Read values of both sensors
@@ -115,32 +120,43 @@ def read_data(micro_controller, output_window, command):
     degrees_celsius = round(degrees_celsius, 2)
 
     # Print the data based on which sensor should be outputted
-    print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command)
+    print_and_write_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command, data_writer)
 
 
-def print_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command):
-    """ Print the data from either the photo sensor or temperature sensor based on set_outputting_photo."""
+def print_and_write_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command, data_writer):
+    """ Print and write the data to csv from either the photo sensor or temperature sensor based on
+    set_outputting_photo. """
     # Only continue if the user-specified interval (in seconds) has passed
     interval = "1"
     if command == "start temp" or command == "start light" or command == "start all":
-        interval = "1"
+        interval = float(1)
     else:
         if "start temp" in command:
-            interval = command.split("start temp")[1]
+            interval = float(command.split("start temp")[1])
         if "start light" in command:
-            interval = command.split("start light")[1]
+            interval = float(command.split("start light")[1])
         if "start all" in command:
-            interval = command.split("start all")[1]
-    if time.time() - micro_controller.time_start > float(interval):
+            interval = float(command.split("start all")[1])
+    if interval < 1:
+        interval = 1
+    elif interval > 3600:
+        interval = 3600
+    # Only do loop if interval has passed
+    if time.time() - micro_controller.time_start > interval:
+        timestamp = time.strftime('%a %H:%M:%S')
         # Set start time for next loop
         micro_controller.set_time_start(time.time())
         if "light" in command or "all" in command:
+            # Blink LED, output to monitor and write to CSV file
             micro_controller.red_led.write(1)
-            output_window.insert(END, f"Light sensor: {time.strftime('%a %H:%M:%S')} - {photo_value} - {photo_value}\n")
+            output_window.insert(END, f"Light sensor: {timestamp} - {photo_value} - {photo_value}\n")
+            data_writer.writerow([timestamp, 'Light sensor', photo_value])
             micro_controller.red_led.write(0)
         if "temp" in command or "all" in command:
+            # Blink LED, output to monitor and write to CSV file
             micro_controller.blue_led.write(1)
-            output_window.insert(END, f"Temperature sensor: {time.strftime('%a %H:%M:%S')} - {temp_value} - {degrees_celsius}\n")
+            output_window.insert(END, f"Temperature sensor: {timestamp} - {temp_value} - {degrees_celsius}\n")
+            data_writer.writerow([timestamp, 'Temperature sensor', temp_value])
             micro_controller.blue_led.write(0)
         # output_window.config(state=DISABLED)
         if "all" in command:
