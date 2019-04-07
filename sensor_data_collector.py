@@ -14,10 +14,10 @@ import os
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
 is_running = False  # Global boolean to determine if data collection is on or not
-
+is_waiting = False
 
 def main():
-    """The main function which sets up the GUI"""
+    """ The main function which sets up the GUI"""
     micro_controller = initiate_arduino()  # get information about the arduino and set it to micro_controller
 
     # Tkinter GUI creation
@@ -43,7 +43,8 @@ def main():
                             "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
                             "stop \t\t\t\t Stops the data collection \n"
                             "list \t\t\t\t Lists the CSV files of collected data \n"
-                            "display <ID of CSV file> \t\t\t\t displays a csv file with some stats \n")
+                            "display <ID of CSV file> \t\t\t\t displays a csv file with some stats \n"
+                            "wait \t\t\t\t Toggle to wait for input on the arduino \n")
     root.mainloop()
 
 
@@ -61,8 +62,7 @@ def initiate_arduino():
     photo_sensor = board.get_pin('a:2:i')
     photo_sensor.enable_reporting()
     center_button = board.get_pin('d:13:i')
-    top_button = board.get_pin('d:12:i')
-    top_button.enable_reporting()
+    center_button.enable_reporting()
 
     # Starting values
     is_outputting_photo = False
@@ -80,7 +80,7 @@ def initiate_arduino():
 
 
 def determine_input(entry, root, output_text, micro_controller):
-    """Determine which command the user has entered and call their respective functions"""
+    """ Determine which command the user has entered and call their respective functions"""
     command = entry.get()  # Get the command
     entry.delete(0, 'end')  # And clear the entry field
     global is_running   # Boolean to see if the program should collect data or not
@@ -90,10 +90,12 @@ def determine_input(entry, root, output_text, micro_controller):
     elif "stop" in command:   # Stop the collection of data
         is_running = False
         output_text.insert(END, "You have stopped the collection of data! \n")
-    elif "list" in command:
+    elif "list" in command:  # lists the csv files that contain collection of data
         list_csv_files(output_text)
-    elif "display" in command:
+    elif "display" in command:  # displays data of chosen csv file
         display_csv_file(command, output_text)
+    elif "wait" in command:  # waits for input on the arduino
+        wait_for_arduino(root, output_text, command, micro_controller)
     elif "help" or '?' or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:   # Show the help menu
         output_text.insert(END, "\n"
                                 "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
@@ -102,11 +104,13 @@ def determine_input(entry, root, output_text, micro_controller):
                                 "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
                                 "stop \t\t\t\t Stops the data collection \n"
                                 "list \t\t\t\t Lists the CSV files of collected data \n"
-                                "display <ID of CSV file> \t\t\t\t displays a csv file with some stats \n")
+                                "display <ID of CSV file> \t\t\t\t displays a csv file with some stats \n"
+                                "wait \t\t\t\t Toggle to wait for input on the arduino \n")
+    output_text.see("end")
 
 
 def start_data_collection(root, output_text, command, micro_controller):
-    """Starts the collection of data and updates the GUI accordingly. Creates a loop that runs until the user send the
+    """ Starts the collection of data and updates the GUI accordingly. Creates a loop that runs until the user send the
     stop command."""
     # Open the csv file writer and write an header
     csvfilename = 'output/collected_data_' + time.strftime('%a %H:%M:%S') + '.csv'
@@ -115,8 +119,24 @@ def start_data_collection(root, output_text, command, micro_controller):
     with open(csvfilename.lower(), 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile)
         data_writer.writerow(['Time stamp', 'Sensor name', 'Raw sensor value'])
+        global is_running
+        should_run = False  # For waiting on the arduino button input
         while is_running:
-            read_data(micro_controller, output_text, command, data_writer)  # Read the data from the Arduino
+            if command == "wait":  # Data collection started with wait command
+                center_button_value = micro_controller.center_button.read()
+                # Check if the button has been pressed, keeping in mind the debounce
+                if center_button_value != 0 and time.time() - micro_controller.debounce_start > 0.2:
+                    if should_run:
+                        should_run = False
+                        is_running = False
+                    else:
+                        should_run = True
+                    # Set the debounce again for the next loop
+                    micro_controller.set_debounce_start(time.time())
+                if should_run:
+                    read_data(micro_controller, output_text, command, data_writer)  # Read the data from the Arduino
+            else:  # Data collection started with start command
+                read_data(micro_controller, output_text, command, data_writer)  # Read the data from the Arduino
             # Refreshing the GUI
             root.update_idletasks()
             root.update()
@@ -133,7 +153,6 @@ def read_data(micro_controller, output_window, command, data_writer):
     volt = 4.98
     degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
     degrees_celsius = round(degrees_celsius, 2)
-
     # Print the data based on which sensor should be outputted
     print_and_write_data(micro_controller, photo_value, temp_value, degrees_celsius, output_window, command, data_writer)
 
@@ -143,7 +162,7 @@ def print_and_write_data(micro_controller, photo_value, temp_value, degrees_cels
     set_outputting_photo. """
     # Only continue if the user-specified interval (in seconds) has passed
     interval = "1"
-    if command == "start temp" or command == "start light" or command == "start all":
+    if command == "wait" or command == "start temp" or command == "start light" or command == "start all":
         interval = float(1)
     else:
         if "start temp" in command:
@@ -161,26 +180,25 @@ def print_and_write_data(micro_controller, photo_value, temp_value, degrees_cels
         timestamp = time.strftime('%a %H:%M:%S')
         # Set start time for next loop
         micro_controller.set_time_start(time.time())
-        if "light" in command or "all" in command:
+        if "light" in command or "all" in command or "wait" in command:
             # Blink LED, output to monitor and write to CSV file
             micro_controller.red_led.write(1)
             output_window.insert(END, f"Light sensor: {timestamp} - {photo_value} - {photo_value}\n")
             data_writer.writerow([timestamp, 'Light sensor', photo_value])
             micro_controller.red_led.write(0)
-        if "temp" in command or "all" in command:
+        if "temp" in command or "all" in command or "wait" in command:
             # Blink LED, output to monitor and write to CSV file
             micro_controller.blue_led.write(1)
             output_window.insert(END, f"Temperature sensor: {timestamp} - {temp_value} - {degrees_celsius}\n")
             data_writer.writerow([timestamp, 'Temperature sensor', temp_value])
             micro_controller.blue_led.write(0)
-        # output_window.config(state=DISABLED)
-        if "all" in command:
+        if "all" in command or "wait" in command:
             output_window.insert(END, "\n")
         output_window.see("end")
 
 
 def list_csv_files(output_window):
-    """display a list to the user of csv files in the output directory"""
+    """ Display a list to the user of csv files in the output directory."""
     counter = 0
     output_window.insert(END, "ID: \t File name: \n")
     for file in os.listdir('output'):
@@ -189,34 +207,51 @@ def list_csv_files(output_window):
 
 
 def display_csv_file(command, output_window):
+    """ Display the data from a chosen CSV file with the minimum, maximum and average value"""
     temp_raw_values = []
     light_raw_values = []
-    csv_id = int(command.split(" ")[1])
+    csv_id = int(command.split(" ")[1])  # Get the CSV ID from the users input
     counter = 0
     csv_path = ""
+    # Find the path of the chosen CSV file based on the CSV ID
     for file in os.listdir('output'):
         if counter == csv_id:
             csv_path = "output/" + file
         counter += 1
-    if csv_path != "":
+    if csv_path != "":  # If found
         with open(csv_path, newline='') as csvfile:
             csvreader = csv.reader(csvfile, delimiter=",")
             for row in csvreader:
                 output_window.insert(END, row)
                 output_window.insert(END, "\n")
-                if "Temperature sensor" in row[1]:
-                    temp_raw_values.append(float(row[2]))
-                if "Light sensor" in row[1]:
-                    light_raw_values.append(float(row[2]))
+                if "Temperature sensor" in row[1]:  # row[1] is the sensor name
+                    temp_raw_values.append(float(row[2]))  # row[2] is the raw value
+                if "Light sensor" in row[1]:  # row[1] is the sensor name
+                    light_raw_values.append(float(row[2]))  # row[2] is the raw value
 
-    if temp_raw_values:
+    if temp_raw_values:  # if not empty
         output_window.insert(END, f"Minimum Temperature value: {min(temp_raw_values)} \n")
         output_window.insert(END, f"Maximum Temperature value: {max(temp_raw_values)} \n")
         output_window.insert(END, f"Average Temperature value: {sum(temp_raw_values)/len(temp_raw_values)} \n")
-    if light_raw_values:
+    if light_raw_values:  # if not empty
         output_window.insert(END, f"Minimum Light value: {min(light_raw_values)} \n")
         output_window.insert(END, f"Maximum Light value: {max(light_raw_values)} \n")
         output_window.insert(END, f"Average Light value: {sum(light_raw_values) / len(light_raw_values)} \n")
+
+
+def wait_for_arduino(root, output_window, command, micro_controller):
+    """ Waits for an button input on the arduino to run or stop the data collection"""
+    global is_waiting
+    if is_waiting:
+        is_waiting = False
+        output_window.insert(END, "Stopped waiting for the arduino \n")
+    else:
+        is_waiting = True
+        output_window.insert(END, "Press the middle button on the arduino to start / stop the collection of data \n"
+                                  "Stop waiting by typing 'wait' again \n")
+        global is_running
+        is_running = True
+        start_data_collection(root, output_window, command, micro_controller)
 
 
 if __name__ == '__main__':
