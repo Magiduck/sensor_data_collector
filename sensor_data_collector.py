@@ -22,6 +22,7 @@ def main():
 
     # Tkinter GUI creation
     root = Tk()
+    root.title("Sensor Data Collector")
     output_text = Text(root)
     scrollbar = Scrollbar(root)
     entry = Entry(root)
@@ -32,6 +33,7 @@ def main():
     scrollbar.grid(row=0, column=1, sticky='ns')  # Fill up from north to south
     entry.grid(row=1, column=0, sticky='we')  # Fill up from west to east
     button.grid(row=1, column=1)
+    root.resizable(width=False, height=False)
     root.bind('<Return>', (lambda event: determine_input(entry, root, output_text, micro_controller)))
     output_text.delete('1.0', END)
     # The menu to show to the user
@@ -187,13 +189,13 @@ def list_csv_files(output_window):
 
 
 def display_csv_file(command, output_window):
+    raw_values = []
     csv_id = int(command.split(" ")[1])
     counter = 0
     csv_path = ""
     for file in os.listdir('output'):
         if counter == csv_id:
             csv_path = "output/" + file
-            print(csv_path)
         counter += 1
     if csv_path != "":
         with open(csv_path, newline='') as csvfile:
@@ -206,6 +208,12 @@ def display_csv_file(command, output_window):
                 else:
                     output_window.insert(END, row)
                     output_window.insert(END, "\n")
+                    raw_values.append(float(row[2]))
+                row_counter += 1
+
+    output_window.insert(END, f"Minimum value: {min(raw_values)} \n")
+    output_window.insert(END, f"Maximum value: {max(raw_values)} \n")
+    output_window.insert(END, f"Average value: {sum(raw_values)/len(raw_values)}\n ")
 
 
 if __name__ == '__main__':
