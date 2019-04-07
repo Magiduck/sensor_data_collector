@@ -9,6 +9,7 @@ except:
 import time
 from tkinter import *
 import csv
+import os
 
 from MicroController import MicroController  # Custom class to hold info of the arduino
 
@@ -35,9 +36,11 @@ def main():
     # The menu to show to the user
     output_text.insert(END, "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                             "The following commands are accepted: \n\n"
-                            "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
+                            "help, ? or menu \t\t\t\t Shows this menu \n"
                             "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
-                            "stop \t\t\t\t\t\t     Stops the data collection \n")
+                            "stop \t\t\t\t Stops the data collection \n"
+                            "list \t\t\t\t Lists the CSV files of collected data \n"
+                            "display <ID of CSV file> \t\t\t\t displays a csv file with some stats \n")
     root.mainloop()
 
 
@@ -84,20 +87,29 @@ def determine_input(entry, root, output_text, micro_controller):
     elif "stop" in command:   # Stop the collection of data
         is_running = False
         output_text.insert(END, "You have stopped the collection of data! \n")
+    elif "list" in command:
+        list_csv_files(output_text)
+    elif "display" in command:
+        display_csv_file(command, output_text)
     elif "help" or '?' or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:   # Show the help menu
         output_text.insert(END, "\n"
                                 "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                                 "The following commands are accepted: \n\n"
-                                "help, ? or menu \t\t\t\t\t\t     Shows this menu \n"
+                                "help, ? or menu \t\t\t\t Shows this menu \n"
                                 "start (temp | light | all) <interval_in_seconds> \t\t\t Starts the data collection \n"
-                                "stop \t\t\t\t\t\t     Stops the data collection \n")
+                                "stop \t\t\t\t Stops the data collection \n"
+                                "list \t\t\t\t Lists the CSV files of collected data \n"
+                                "display <ID of CSV file> \t\t\t\t displays a csv file with some stats \n")
 
 
 def start_data_collection(root, output_text, command, micro_controller):
     """Starts the collection of data and updates the GUI accordingly. Creates a loop that runs until the user send the
     stop command."""
     # Open the csv file writer and write an header
-    with open('output/collected_data.csv', 'w', newline='') as csvfile:
+    csvfilename = 'output/collected_data_' + time.strftime('%a %H:%M:%S') + '.csv'
+    csvfilename = csvfilename.replace(' ', '_')
+    csvfilename = csvfilename.replace(':', "_")
+    with open(csvfilename.lower(), 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile)
         data_writer.writerow(['Time stamp', 'Sensor name', 'Raw sensor value'])
         while is_running:
@@ -162,6 +174,36 @@ def print_and_write_data(micro_controller, photo_value, temp_value, degrees_cels
         if "all" in command:
             output_window.insert(END, "\n")
         output_window.see("end")
+
+
+def list_csv_files(output_window):
+    counter = 0
+    output_window.insert(END, "ID: \t File name: \n")
+    for file in os.listdir('output'):
+        output_window.insert(END, f"{counter} \t {file} \n")
+        counter += 1
+
+
+def display_csv_file(command, output_window):
+    csv_id = int(command.split(" ")[1])
+    counter = 0
+    csv_path = ""
+    for file in os.listdir('output'):
+        if counter == csv_id:
+            csv_path = "output/" + file
+            print(csv_path)
+        counter += 1
+    if csv_path != "":
+        with open(csv_path, newline='') as csvfile:
+            csvreader = csv.reader(csvfile, delimiter=",")
+            row_counter = 0
+            for row in csvreader:
+                if row_counter == 0:
+                    output_window.insert(END, row)
+                    output_window.insert(END, "\n")
+                else:
+                    output_window.insert(END, row)
+                    output_window.insert(END, "\n")
 
 
 if __name__ == '__main__':
