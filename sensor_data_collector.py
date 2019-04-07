@@ -189,7 +189,8 @@ def list_csv_files(output_window):
 
 
 def display_csv_file(command, output_window):
-    raw_values = []
+    temp_raw_values = []
+    light_raw_values = []
     csv_id = int(command.split(" ")[1])
     counter = 0
     csv_path = ""
@@ -200,20 +201,22 @@ def display_csv_file(command, output_window):
     if csv_path != "":
         with open(csv_path, newline='') as csvfile:
             csvreader = csv.reader(csvfile, delimiter=",")
-            row_counter = 0
             for row in csvreader:
-                if row_counter == 0:
-                    output_window.insert(END, row)
-                    output_window.insert(END, "\n")
-                else:
-                    output_window.insert(END, row)
-                    output_window.insert(END, "\n")
-                    raw_values.append(float(row[2]))
-                row_counter += 1
+                output_window.insert(END, row)
+                output_window.insert(END, "\n")
+                if "Temperature sensor" in row[1]:
+                    temp_raw_values.append(float(row[2]))
+                if "Light sensor" in row[1]:
+                    light_raw_values.append(float(row[2]))
 
-    output_window.insert(END, f"Minimum value: {min(raw_values)} \n")
-    output_window.insert(END, f"Maximum value: {max(raw_values)} \n")
-    output_window.insert(END, f"Average value: {sum(raw_values)/len(raw_values)}\n ")
+    if temp_raw_values:
+        output_window.insert(END, f"Minimum Temperature value: {min(temp_raw_values)} \n")
+        output_window.insert(END, f"Maximum Temperature value: {max(temp_raw_values)} \n")
+        output_window.insert(END, f"Average Temperature value: {sum(temp_raw_values)/len(temp_raw_values)} \n")
+    if light_raw_values:
+        output_window.insert(END, f"Minimum Light value: {min(light_raw_values)} \n")
+        output_window.insert(END, f"Maximum Light value: {max(light_raw_values)} \n")
+        output_window.insert(END, f"Average Light value: {sum(light_raw_values) / len(light_raw_values)} \n")
 
 
 if __name__ == '__main__':
