@@ -82,12 +82,13 @@ def initiate_arduino():
 def determine_input(entry, root, output_text, micro_controller):
     """ Determine which command the user has entered and call their respective functions"""
     command = entry.get()  # Get the command
+    print(f"command = {command}")  # DEBUGGING
     entry.delete(0, 'end')  # And clear the entry field
-    global is_running   # Boolean to see if the program should collect data or not
+    global is_running  # Boolean to see if the program should collect data or not
     if "start" in command:  # Start the collection of data
         is_running = True
         start_data_collection(root, output_text, command, micro_controller)
-    elif "stop" in command:   # Stop the collection of data
+    elif "stop" in command:  # Stop the collection of data
         is_running = False
         output_text.insert(END, "You have stopped the collection of data! \n")
     elif "list" in command:  # lists the csv files that contain collection of data
@@ -96,7 +97,7 @@ def determine_input(entry, root, output_text, micro_controller):
         display_csv_file(command, output_text)
     elif "wait" in command:  # waits for input on the Arduino
         wait_for_arduino(root, output_text, command, micro_controller)
-    elif "help" or '?' or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:   # Show the help menu
+    elif "help" or '?' or "HELP" or "Help" or "menu" or "Menu" or "MENU" in command:  # Show the help menu
         output_text.insert(END, "\n"
                                 "Welcome to the Sensor Data Collector made by Magor Katay and Tijs van Lieshout! \n"
                                 "The following commands are accepted: \n\n"
@@ -116,6 +117,7 @@ def start_data_collection(root, output_text, command, micro_controller):
     csvfilename = 'output/collected_data_' + time.strftime('%a %H:%M:%S') + '.csv'
     csvfilename = csvfilename.replace(' ', '_')
     csvfilename = csvfilename.replace(':', "_")
+    print(csvfilename)  # DEBUGGING
     with open(csvfilename.lower(), 'w', newline='') as csvfile:
         data_writer = csv.writer(csvfile)
         data_writer.writerow(['Time stamp', 'Sensor name', 'Raw sensor value'])
@@ -124,6 +126,7 @@ def start_data_collection(root, output_text, command, micro_controller):
         while is_running:
             if command == "wait":  # Data collection started with wait command
                 center_button_value = micro_controller.center_button.read()
+                print(f"center_button_value = {center_button_value}")  # DEBUGGING
                 # Check if the button has been pressed, keeping in mind the debounce
                 if center_button_value != 0 and time.time() - micro_controller.debounce_start > 0.2:
                     if should_run:
@@ -147,19 +150,21 @@ def read_data(micro_controller, output_text, command, data_writer):
 
     # Read values of both sensors
     photo_value = micro_controller.photo_sensor.read()
+    print(f"photo_value = {photo_value}")  # DEBUGGING
     temp_value = micro_controller.temp_sensor.read()
-
+    print(f"temp_value = {temp_value}")  # DEBUGGING
     # Voltage of the Arduino
     volt = 4.98
 
     # Converting the raw output of the photo sensor into lux
     vout = photo_value * volt
-    ldr_resistance = 10.0 * ((5-vout)/vout)
+    ldr_resistance = 10.0 * ((5 - vout) / vout)
     lux = 500 / ldr_resistance
 
     # Converting the raw output of the temp sensor into degrees celsius
     degrees_celsius = ((temp_value * volt) / 0.01) - 273.15
     degrees_celsius = round(degrees_celsius, 2)
+    print(f"degrees_celsius = {degrees_celsius}")  # DEBUGGING
     # Print the data based on which sensor should be outputted
     print_and_write_data(micro_controller, photo_value, lux, temp_value, degrees_celsius, output_text, command,
                          data_writer)
@@ -172,20 +177,27 @@ def print_and_write_data(micro_controller, photo_value, lux, temp_value, degrees
     interval = "1"
     if command == "wait" or command == "start temp" or command == "start light" or command == "start all":
         interval = float(1)
+        print(interval)  # DEBUGGING
     else:
         if "start temp" in command:
             interval = float(command.split("start temp ")[1])
+            print(interval)  # DEBUGGING
         if "start light" in command:
             interval = float(command.split("start light ")[1])
+            print(interval)  # DEBUGGING
         if "start all" in command:
             interval = float(command.split("start all ")[1])
+            print(interval)  # DEBUGGING
     if interval < 1:
         interval = 1
+        print(interval)  # DEBUGGING
     elif interval > 3600:
         interval = 3600
+        print(interval)  # DEBUGGING
     # Only do loop if interval has passed
     if time.time() - micro_controller.time_start > interval:
         timestamp = time.strftime('%a %H:%M:%S')
+        print(f"timestamp = {timestamp}")  # DEBUGGING
         # Set start time for next loop
         micro_controller.set_time_start(time.time())
         if "light" in command or "all" in command or "wait" in command:
@@ -226,6 +238,7 @@ def display_csv_file(command, output_text):
         for file in os.listdir('output'):
             if counter == csv_id:
                 csv_path = "output/" + file
+                print(csv_path)  # DEBUGGING
             counter += 1
     except IOError as e:
         print("Error, output couldn't be found!: ")
